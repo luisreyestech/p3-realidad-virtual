@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Órbita | Luis Reyes</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #111018; color: #f4f1ff; }
+    header { padding: 28px 7%; border-bottom: 1px solid #302b42; }
+    .marca { max-width: 1100px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .logo { font-size: 14px; letter-spacing: 4px; color: #b8ff5c; font-weight: bold; }
+    .autor { color: #b5b0c7; font-size: 13px; }
+    main { max-width: 1100px; margin: auto; padding: 45px 22px 35px; }
+    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: end; margin-bottom: 30px; }
+    .etiqueta { color: #b8ff5c; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+    h1 { font-size: clamp(36px, 5vw, 60px); line-height: .98; margin: 12px 0; letter-spacing: -2px; }
+    .hero p { color: #b5b0c7; line-height: 1.7; margin: 0; max-width: 420px; }
+    .nota { border-left: 2px solid #b8ff5c; padding: 8px 0 8px 17px; color: #d4cfe3; line-height: 1.6; font-size: 14px; }
+    .panel { background: #1b1925; border: 1px solid #302b42; border-radius: 20px; padding: 18px; }
+    .controles { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-bottom: 15px; }
+    button { font: inherit; cursor: pointer; border: 1px solid #484158; border-radius: 30px; padding: 11px 17px; background: transparent; color: #e7e1f5; }
+    button:hover, button.activo { background: #b8ff5c; color: #171817; border-color: #b8ff5c; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    .espacio { border-radius: 13px; overflow: hidden; background: #050507; }
+    a-scene { display: block; height: 440px; width: 100%; }
+    .pie-panel { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 18px 3px 2px; }
+    .pie-panel h2 { margin: 0 0 5px; font-size: 18px; }
+    .pie-panel p { margin: 0; color: #aaa4bc; font-size: 14px; line-height: 1.5; }
+    #mensaje { min-height: 18px; margin: 12px 2px 0; color: #b8ff5c; font-size: 13px; }
+    footer { max-width: 1100px; margin: auto; padding: 0 22px 25px; color: #777187; font-size: 12px; letter-spacing: .5px; }
+    @media (max-width: 650px) { header { padding: 22px; } .hero { grid-template-columns: 1fr; gap: 15px; } main { padding-top: 30px; } a-scene { height: 310px; } .panel { padding: 12px; } h1 { letter-spacing: -1px; } }
+  </style>
+</head>
+<body>
+  <header><div class="marca"><div class="logo">ÓRBITA / VR LAB</div><div class="autor">Experiencia de Luis Reyes</div></div></header>
+  <main>
+    <section class="hero">
+      <div><div class="etiqueta">Exploración inmersiva · 360°</div><h1>Sal de la pantalla.<br>Entra en el mundo.</h1><p>Explora una escena panorámica o viaja a través de un vídeo envolvente. Arrastra el ratón dentro del visor para cambiar de dirección.</p></div>
+      <div class="nota">Dos formas de mirar alrededor.<br>Sin gafas de realidad virtual: solo necesitas el ratón o la pantalla táctil.</div>
+    </section>
+    <section class="panel">
+      <div class="controles"><button id="btnImagen" class="activo" onclick="mostrarImagen()">01 · Panorama</button><button id="btnVideo" onclick="mostrarVideo()">02 · Vídeo espacial</button></div>
+      <div class="espacio"><a-scene embedded vr-mode-ui="enabled: false" loading-screen="enabled: false">
+        <a-assets><video id="video360" src="https://upload.wikimedia.org/wikipedia/commons/transcoded/5/5d/Earth_360_Video_The_Call_of_Science.webm/Earth_360_Video_The_Call_of_Science.webm.360p.vp9.webm" preload="metadata" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video></a-assets>
+        <a-sky id="panorama" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/cubes.jpg" rotation="0 -90 0"></a-sky>
+        <a-videosphere id="esferaVideo" src="#video360" visible="false" rotation="0 -90 0"></a-videosphere>
+        <a-entity camera look-controls position="0 1.6 0"></a-entity>
+      </a-scene></div>
+      <div class="pie-panel"><div><h2 id="titulo">Panorama geométrico</h2><p id="descripcion">Gira la vista y explora la imagen en todas las direcciones.</p></div><div class="controles" style="margin:0"><button id="btnPlay" onclick="reproducirPausar()" disabled>▶ Reproducir</button><button onclick="reiniciarVista()">Centrar vista</button></div></div>
+      <div id="mensaje" role="status"></div>
+    </section>
+  </main>
+  <footer>ÓRBITA · PRÁCTICA DE REALIDAD VIRTUAL CON A-FRAME</footer>
+  <script>
+    const video = document.querySelector('#video360');
+    const panorama = document.querySelector('#panorama');
+    const esfera = document.querySelector('#esferaVideo');
+    const btnImagen = document.querySelector('#btnImagen');
+    const btnVideo = document.querySelector('#btnVideo');
+    const btnPlay = document.querySelector('#btnPlay');
+    const mensaje = document.querySelector('#mensaje');
+
+    function mostrarImagen() {
+      video.pause(); panorama.setAttribute('visible', true); esfera.setAttribute('visible', false);
+      btnImagen.classList.add('activo'); btnVideo.classList.remove('activo'); btnPlay.disabled = true;
+      btnPlay.textContent = '▶ Reproducir'; document.querySelector('#titulo').textContent = 'Panorama geométrico';
+      document.querySelector('#descripcion').textContent = 'Gira la vista y explora la imagen en todas las direcciones.'; mensaje.textContent = '';
+    }
+    function mostrarVideo() {
+      panorama.setAttribute('visible', false); esfera.setAttribute('visible', true);
+      btnVideo.classList.add('activo'); btnImagen.classList.remove('activo'); btnPlay.disabled = false;
+      document.querySelector('#titulo').textContent = 'La Tierra en 360°';
+      document.querySelector('#descripcion').textContent = 'Una visita inmersiva a paisajes y entornos naturales de nuestro planeta.';
+      mensaje.textContent = 'Pulsa reproducir para comenzar el vídeo.';
+    }
+    function reproducirPausar() {
+      if (video.paused) { video.play().then(() => { btnPlay.textContent = 'Ⅱ Pausar'; mensaje.textContent = ''; }).catch(() => { mensaje.textContent = 'No se pudo iniciar el vídeo. Comprueba la conexión e inténtalo de nuevo.'; }); }
+      else { video.pause(); btnPlay.textContent = '▶ Reproducir'; }
+    }
+    function reiniciarVista() {
+      const camara = document.querySelector('[camera]'); const controles = camara.components['look-controls'];
+      camara.setAttribute('rotation', '0 0 0');
+      if (controles) { controles.pitchObject.rotation.x = 0; controles.yawObject.rotation.y = 0; }
+    }
+    video.addEventListener('pause', () => { btnPlay.textContent = '▶ Reproducir'; });
+    video.addEventListener('playing', () => { btnPlay.textContent = 'Ⅱ Pausar'; });
+    video.addEventListener('error', () => { if (btnVideo.classList.contains('activo')) mensaje.textContent = 'No se pudo cargar el vídeo. Comprueba la conexión.'; });
+  </script>
+</body>
+</html>
